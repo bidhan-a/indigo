@@ -17,6 +17,8 @@ type Map struct {
 	parallelism uint
 }
 
+var _ stream.Processor = (*Map)(nil)
+
 // NewMap - initialize and return a new Map processor.
 func NewMap(f MapFunc, parallelism uint) *Map {
 	m := &Map{
