@@ -66,8 +66,7 @@ func (fp *Filter) setup() {
 		wg.Add(1)
 		go func() {
 			for d := range fp.in {
-				res := fp.f(d)
-				if res {
+				if fp.f(d) {
 					fp.out <- d
 				}
 			}
