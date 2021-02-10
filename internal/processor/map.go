@@ -21,53 +21,53 @@ var _ stream.Processor = (*Map)(nil)
 
 // NewMap - initialize and return a new Map processor.
 func NewMap(f MapFunc, parallelism uint) *Map {
-	m := &Map{
+	mp := &Map{
 		f:           f,
 		in:          make(chan interface{}),
 		out:         make(chan interface{}),
 		parallelism: parallelism,
 	}
-	go m.setup()
-	return m
+	go mp.setup()
+	return mp
 }
 
 // InputChan - input channel for Map processor.
-func (m *Map) InputChan() chan<- interface{} {
-	return m.in
+func (mp *Map) InputChan() chan<- interface{} {
+	return mp.in
 }
 
 // OutputChan - output channel for Map processor.
-func (m *Map) OutputChan() <-chan interface{} {
-	return m.out
+func (mp *Map) OutputChan() <-chan interface{} {
+	return mp.out
 }
 
 // AddProcessor - add a Processor to Map processor.
-func (m *Map) AddProcessor(p stream.Processor) stream.Processor {
-	go m.connect(p)
+func (mp *Map) AddProcessor(p stream.Processor) stream.Processor {
+	go mp.connect(p)
 	return p
 }
 
 // AddSink - add a Sink to Map processor.
-func (m *Map) AddSink(s stream.Sink) {
-	m.connect(s)
+func (mp *Map) AddSink(s stream.Sink) {
+	mp.connect(s)
 }
 
-func (m *Map) connect(nextProcessorInput stream.Input) {
-	for d := range m.OutputChan() {
+func (mp *Map) connect(nextProcessorInput stream.Input) {
+	for d := range mp.OutputChan() {
 		nextProcessorInput.InputChan() <- d
 	}
 	close(nextProcessorInput.InputChan())
 }
 
-func (m *Map) setup() {
+func (mp *Map) setup() {
 	var wg sync.WaitGroup
 
-	for i := 0; i < int(m.parallelism); i++ {
+	for i := 0; i < int(mp.parallelism); i++ {
 		wg.Add(1)
 		go func() {
-			for d := range m.in {
-				res := m.f(d)
-				m.out <- res
+			for d := range mp.in {
+				res := mp.f(d)
+				mp.out <- res
 			}
 			wg.Done()
 		}()
@@ -75,7 +75,7 @@ func (m *Map) setup() {
 
 	go func() {
 		wg.Wait()
-		close(m.out)
+		close(mp.out)
 	}()
 
 }
